@@ -1,7 +1,7 @@
-import 'dart:developer';
-
 import 'package:agora_uikit/agora_uikit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:meeting/services/firebase.dart';
 
 class CallPage extends StatefulWidget {
   const CallPage({Key? key, required this.channel}) : super(key: key);
@@ -19,6 +19,20 @@ class _CallPageState extends State<CallPage> {
   @override
   void initState() {
     super.initState();
+    FirebaseFirestore.instance
+        .collection("sellers")
+        .doc(widget.channel)
+        .snapshots()
+        .listen((event) {
+      if (event.exists && event.data() != null) {
+        if (mounted) {
+          if (!event.data()!['isCalling']) {
+            client.engine.leaveChannel();
+            Navigator.pop(context);
+          }
+        }
+      }
+    });
     initAgora();
   }
 
@@ -41,8 +55,11 @@ class _CallPageState extends State<CallPage> {
 // Build layout
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
         body: SafeArea(
           child: _isInitialised
               ? Stack(
@@ -51,8 +68,9 @@ class _CallPageState extends State<CallPage> {
                     AgoraVideoButtons(
                       client: client,
                       onDisconnect: () {
-                        log("Hello");
-                        Navigator.pop(context);
+                        MeetingFirebase().cutCall(widget.channel).then((value) {
+                          Navigator.pop(context);
+                        });
                       },
                     ),
                   ],

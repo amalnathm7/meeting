@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "782041750403",
+    "project_id": "meeting-13ef0",
+    "storage_bucket": "meeting-13ef0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782041750403:android:1888b43860817f4c52b4b6",
+        "android_client_info": {
+          "package_name": "com.freelance.meeting"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782041750403-mkm98mhsf737h3eqbht8tel23b8mgm0v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrD-GPZcYVIMVbpK3gh8zAnxMqQqfyLKc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782041750403-mkm98mhsf737h3eqbht8tel23b8mgm0v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
