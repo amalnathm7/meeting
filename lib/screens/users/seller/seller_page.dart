@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:meeting/screens/call/call_page.dart';
 import 'package:meeting/services/firebase.dart';
@@ -14,8 +16,9 @@ class SellerPage extends StatefulWidget {
   State<SellerPage> createState() => _SellerPageState();
 }
 
-class _SellerPageState extends State<SellerPage> {
+class _SellerPageState extends State<SellerPage> with WidgetsBindingObserver {
   bool _isCalling = false;
+  bool _isMinimised = false;
   String buyerId = "";
 
   final List<Map<String, dynamic>> _missedCalls = [];
@@ -23,18 +26,29 @@ class _SellerPageState extends State<SellerPage> {
   final List<Map<String, dynamic>> _rejectedCalls = [];
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _isMinimised = true;
+    } else if (state == AppLifecycleState.resumed) {
+      _isMinimised = false;
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addObserver(this);
+
     FirebaseMessaging.instance.getToken().then((token) {
-      MeetingFirebase().addSeller(widget.id, token!);
+      MeetingFirebase().updateToken(widget.id, token!);
     });
 
     FirebaseFirestore.instance
         .collection("sellers")
         .doc(widget.id)
         .snapshots()
-        .listen((event) {
+        .listen((event) async {
       if (event.exists) {
         if (mounted) {
           setState(() {
@@ -42,10 +56,21 @@ class _SellerPageState extends State<SellerPage> {
             buyerId = event.data()!['buyerId'];
           });
 
-          if (_isCalling) {
-            if (!event.data()!['isAccepted']) {
+          final FlutterLocalNotificationsPlugin
+              flutterLocalNotificationsPlugin =
+              FlutterLocalNotificationsPlugin();
+          final notificationAppLaunchDetails =
+              await flutterLocalNotificationsPlugin
+                  .getNotificationAppLaunchDetails();
+
+          if (_isCalling &&
+              (notificationAppLaunchDetails == null ||
+                  !notificationAppLaunchDetails.didNotificationLaunchApp)) {
+            if (!event.data()!['isAccepted'] && !_isMinimised) {
               FlutterRingtonePlayer.playRingtone();
             }
+          } else {
+            FlutterRingtonePlayer.stop();
           }
         }
       }
@@ -55,6 +80,7 @@ class _SellerPageState extends State<SellerPage> {
         .collection("sellers")
         .doc(widget.id)
         .collection("missed_calls")
+        .orderBy('time', descending: true)
         .snapshots()
         .listen((element) {
       if (mounted) {
@@ -71,6 +97,7 @@ class _SellerPageState extends State<SellerPage> {
         .collection("sellers")
         .doc(widget.id)
         .collection("accepted_calls")
+        .orderBy('time', descending: true)
         .snapshots()
         .listen((element) {
       if (mounted) {
@@ -87,6 +114,7 @@ class _SellerPageState extends State<SellerPage> {
         .collection("sellers")
         .doc(widget.id)
         .collection("rejected_calls")
+        .orderBy('time', descending: true)
         .snapshots()
         .listen((element) {
       if (mounted) {
@@ -98,6 +126,12 @@ class _SellerPageState extends State<SellerPage> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   @override
@@ -236,6 +270,9 @@ class _SellerPageState extends State<SellerPage> {
                             MeetingFirebase().cutCall(widget.id, buyerId,
                                 DateTime.now(), Duration.zero);
                             FlutterRingtonePlayer.stop();
+                            final sendPort = IsolateNameServer.lookupPortByName(
+                                'currentIsolate');
+                            sendPort?.send('stop');
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -257,6 +294,9 @@ class _SellerPageState extends State<SellerPage> {
                         child: GestureDetector(
                           onTap: () {
                             FlutterRingtonePlayer.stop();
+                            final sendPort = IsolateNameServer.lookupPortByName(
+                                'currentIsolate');
+                            sendPort?.send('stop');
                             MeetingFirebase()
                                 .acceptCall(widget.id)
                                 .then((value) {

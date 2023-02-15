@@ -1,6 +1,8 @@
 import 'package:agora_uikit/agora_uikit.dart';
+import 'package:agora_uikit/controllers/session_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:meeting/services/firebase.dart';
 
 class CallPage extends StatefulWidget {
@@ -32,13 +34,26 @@ class _CallPageState extends State<CallPage> {
       if (event.exists && event.data() != null) {
         if (mounted) {
           if (!event.data()!['isCalling']) {
-            client.engine.leaveChannel();
+            endCall(
+              sessionController: client.sessionController,
+            );
             Navigator.pop(context);
+            FlutterRingtonePlayer.stop();
           }
         }
       }
     });
     initAgora();
+  }
+
+  Future<void> endCall({required SessionController sessionController}) async {
+    await sessionController.value.engine?.leaveChannel();
+    if (sessionController.value.connectionData!.rtmEnabled) {
+      await sessionController.value.agoraRtmChannel?.leave();
+      await sessionController.value.agoraRtmClient?.logout();
+    }
+    await sessionController.value.engine?.stopPreview();
+    await sessionController.value.engine?.release();
   }
 
   void initAgora() async {

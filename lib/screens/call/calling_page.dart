@@ -17,6 +17,7 @@ class _CallingPageState extends State<CallingPage> {
   bool _isCalling = true;
   bool _isCancelled = false;
   bool _isMissed = false;
+  bool _flag = false;
 
   @override
   void initState() {
@@ -31,7 +32,11 @@ class _CallingPageState extends State<CallingPage> {
         if (mounted) {
           setState(() {
             _isCalling = event.data()!['isCalling'];
-            MeetingFirebase().callOnFcmApiSendPushNotifications(event.data()!['token'], widget.buyerId);
+            if (!_flag) {
+              _flag = true;
+              MeetingFirebase().callOnFcmApiSendPushNotifications(
+                  event.data()!['token'], widget.buyerId, context);
+            }
           });
 
           if (!_isCalling) {

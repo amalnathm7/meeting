@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -10,6 +11,12 @@ class MeetingFirebase {
       'isCalling': false,
       'isAccepted': false,
       'buyerId': '',
+      'token': token,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateToken(String id, String token) async {
+    await _firebaseFirestore.collection("sellers").doc(id).set({
       'token': token,
     }, SetOptions(merge: true));
   }
@@ -78,7 +85,7 @@ class MeetingFirebase {
   }
 
   Future<bool> callOnFcmApiSendPushNotifications(
-      String token, String id) async {
+      String token, String id, BuildContext context) async {
     const postUrl = 'https://fcm.googleapis.com/fcm/send';
     final data = {
       "to": token,
@@ -100,6 +107,7 @@ class MeetingFirebase {
         headers: headers);
 
     if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sent!")));
       return true;
     } else {
       return false;

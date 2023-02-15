@@ -1,6 +1,5 @@
 import 'dart:isolate';
 import 'dart:ui';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -71,14 +70,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final int appCategory = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    final sendPort = IsolateNameServer.lookupPortByName('currentIsolate');
-    sendPort?.send('stop');
-  }
+  final int appCategory = 2;
 
   @override
   Widget build(BuildContext context) {
