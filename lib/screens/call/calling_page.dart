@@ -21,6 +21,7 @@ class _CallingPageState extends State<CallingPage> {
   @override
   void initState() {
     super.initState();
+
     FirebaseFirestore.instance
         .collection("sellers")
         .doc(widget.id)
@@ -30,6 +31,7 @@ class _CallingPageState extends State<CallingPage> {
         if (mounted) {
           setState(() {
             _isCalling = event.data()!['isCalling'];
+            MeetingFirebase().callOnFcmApiSendPushNotifications(event.data()!['token'], widget.buyerId);
           });
 
           if (!_isCalling) {

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:meeting/screens/call/call_page.dart';
@@ -24,6 +25,11 @@ class _SellerPageState extends State<SellerPage> {
   @override
   void initState() {
     super.initState();
+
+    FirebaseMessaging.instance.getToken().then((token) {
+      MeetingFirebase().addSeller(widget.id, token!);
+    });
+
     FirebaseFirestore.instance
         .collection("sellers")
         .doc(widget.id)
@@ -51,9 +57,13 @@ class _SellerPageState extends State<SellerPage> {
         .collection("missed_calls")
         .snapshots()
         .listen((element) {
-      _missedCalls.clear();
-      for (var element in element.docs) {
-        _missedCalls.add(element.data());
+      if (mounted) {
+        setState(() {
+          _missedCalls.clear();
+          for (var element in element.docs) {
+            _missedCalls.add(element.data());
+          }
+        });
       }
     });
 
@@ -63,9 +73,13 @@ class _SellerPageState extends State<SellerPage> {
         .collection("accepted_calls")
         .snapshots()
         .listen((element) {
-      _acceptedCalls.clear();
-      for (var element in element.docs) {
-        _acceptedCalls.add(element.data());
+      if (mounted) {
+        setState(() {
+          _acceptedCalls.clear();
+          for (var element in element.docs) {
+            _acceptedCalls.add(element.data());
+          }
+        });
       }
     });
 
@@ -75,9 +89,13 @@ class _SellerPageState extends State<SellerPage> {
         .collection("rejected_calls")
         .snapshots()
         .listen((element) {
-      _rejectedCalls.clear();
-      for (var element in element.docs) {
-        _rejectedCalls.add(element.data());
+      if (mounted) {
+        setState(() {
+          _rejectedCalls.clear();
+          for (var element in element.docs) {
+            _rejectedCalls.add(element.data());
+          }
+        });
       }
     });
   }
@@ -208,7 +226,8 @@ class _SellerPageState extends State<SellerPage> {
                   ),
                 ),
               if (_isCalling)
-                Expanded(
+                SizedBox(
+                  height: size.height * 0.05,
                   child: Row(
                     children: [
                       Expanded(

@@ -1,13 +1,16 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MeetingFirebase {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  Future<void> addSeller(String id) async {
+  Future<void> addSeller(String id, String token) async {
     await _firebaseFirestore.collection("sellers").doc(id).set({
       'isCalling': false,
       'isAccepted': false,
       'buyerId': '',
+      'token': token,
     }, SetOptions(merge: true));
   }
 
@@ -71,6 +74,35 @@ class MeetingFirebase {
         'time': start,
         'duration': duration.inSeconds,
       });
+    }
+  }
+
+  Future<bool> callOnFcmApiSendPushNotifications(
+      String token, String id) async {
+    const postUrl = 'https://fcm.googleapis.com/fcm/send';
+    final data = {
+      "to": token,
+      "data": {
+        "title": 'Incoming call from $id',
+        "body": 'Click to open',
+      },
+    };
+
+    final headers = {
+      'content-type': 'application/json',
+      'Authorization':
+          'key=AAAAthVSG4M:APA91bENvVmMoACGhQEjVRKOpdGNPJrQxxSJoCY20E0cRpiFrS8WYENlaxyvMkZSS67_4qD2375kYFXIQjZAltlEt3SJXri1ceS9Uoj09soLkD2PxEYpwCEl7oNXUt4S1xbyZZ5LQvdy' // 'key=YOUR_SERVER_KEY'
+    };
+
+    final response = await http.post(Uri.parse(postUrl),
+        body: json.encode(data),
+        encoding: Encoding.getByName('utf-8'),
+        headers: headers);
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
     }
   }
 }

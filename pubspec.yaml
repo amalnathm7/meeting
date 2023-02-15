@@ -40,6 +40,10 @@ dependencies:
   cloud_firestore: ^4.3.1
   flutter_ringtone_player: ^3.2.0
   intl: ^0.18.0
+  firebase_messaging: ^14.2.2
+  http: ^0.13.5
+  audioplayers: ^3.0.1
+  flutter_local_notifications: ^13.0.0
 
 dev_dependencies:
   flutter_test:
