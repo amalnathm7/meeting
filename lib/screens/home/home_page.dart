@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const BuyerPage()));
+                            builder: (context) => const BuyerPage(id: "buyer1",)));
                   },
                   child: Container(
                     decoration: BoxDecoration(

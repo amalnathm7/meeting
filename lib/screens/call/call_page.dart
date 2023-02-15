@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:meeting/services/firebase.dart';
 
 class CallPage extends StatefulWidget {
-  const CallPage({Key? key, required this.channel}) : super(key: key);
-  final String channel;
+  const CallPage({Key? key, required this.id, required this.buyerId})
+      : super(key: key);
+  final String id;
+  final String buyerId;
 
   @override
   State<CallPage> createState() => _CallPageState();
@@ -14,14 +16,17 @@ class CallPage extends StatefulWidget {
 class _CallPageState extends State<CallPage> {
   bool _isInitialised = false;
   late final AgoraClient client;
+  late DateTime start;
+  late DateTime end;
 
 // Initialize the Agora Engine
   @override
   void initState() {
     super.initState();
+    start = DateTime.now();
     FirebaseFirestore.instance
         .collection("sellers")
-        .doc(widget.channel)
+        .doc(widget.id)
         .snapshots()
         .listen((event) {
       if (event.exists && event.data() != null) {
@@ -41,7 +46,7 @@ class _CallPageState extends State<CallPage> {
     client = AgoraClient(
       agoraConnectionData: AgoraConnectionData(
         appId: "89a27244bbe542c8b4a4a1ce41d54a41",
-        channelName: widget.channel,
+        channelName: widget.id,
       ),
     );
     await client.initialize();
@@ -68,8 +73,14 @@ class _CallPageState extends State<CallPage> {
                     AgoraVideoButtons(
                       client: client,
                       onDisconnect: () {
-                        MeetingFirebase().cutCall(widget.channel).then((value) {
-                          Navigator.pop(context);
+                        end = DateTime.now();
+                        MeetingFirebase()
+                            .cutCall(widget.id, widget.buyerId, start,
+                                end.difference(start))
+                            .then((value) {
+                          if (mounted) {
+                            Navigator.pop(context);
+                          }
                         });
                       },
                     ),

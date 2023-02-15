@@ -3,7 +3,8 @@ import 'package:meeting/screens/call/calling_page.dart';
 import 'package:meeting/services/firebase.dart';
 
 class BuyerPage extends StatefulWidget {
-  const BuyerPage({Key? key}) : super(key: key);
+  const BuyerPage({Key? key, required this.id}) : super(key: key);
+  final String id;
 
   @override
   State<BuyerPage> createState() => _BuyerPageState();
@@ -27,7 +28,7 @@ class _BuyerPageState extends State<BuyerPage> {
                 height: size.height * 0.03,
               ),
               Text(
-                "Meeting",
+                widget.id,
                 style: TextStyle(fontSize: size.height * 0.05),
               ),
               SizedBox(
@@ -36,11 +37,16 @@ class _BuyerPageState extends State<BuyerPage> {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    MeetingFirebase().callSeller("seller1").then((value) {
+                    MeetingFirebase()
+                        .callSeller("seller1", widget.id)
+                        .then((value) {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const CallingPage(id: "seller1")));
+                              builder: (context) => CallingPage(
+                                    id: "seller1",
+                                    buyerId: widget.id,
+                                  )));
                     });
                   },
                   child: Container(
@@ -62,11 +68,16 @@ class _BuyerPageState extends State<BuyerPage> {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    MeetingFirebase().callSeller("seller2").then((value) {
+                    MeetingFirebase()
+                        .callSeller("seller2", widget.id)
+                        .then((value) {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const CallingPage(id: "seller2")));
+                              builder: (context) => CallingPage(
+                                    id: "seller2",
+                                    buyerId: widget.id,
+                                  )));
                     });
                   },
                   child: Container(
@@ -88,11 +99,16 @@ class _BuyerPageState extends State<BuyerPage> {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    MeetingFirebase().callSeller("seller3").then((value) {
+                    MeetingFirebase()
+                        .callSeller("seller3", widget.id)
+                        .then((value) {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const CallingPage(id: "seller3")));
+                              builder: (context) => CallingPage(
+                                    id: "seller3",
+                                    buyerId: widget.id,
+                                  )));
                     });
                   },
                   child: Container(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:meeting/screens/call/call_page.dart';
 import 'package:meeting/services/firebase.dart';
+import 'package:intl/intl.dart';
 
 class SellerPage extends StatefulWidget {
   const SellerPage({Key? key, required this.id}) : super(key: key);
@@ -14,6 +15,11 @@ class SellerPage extends StatefulWidget {
 
 class _SellerPageState extends State<SellerPage> {
   bool _isCalling = false;
+  String buyerId = "";
+
+  final List<Map<String, dynamic>> _missedCalls = [];
+  final List<Map<String, dynamic>> _acceptedCalls = [];
+  final List<Map<String, dynamic>> _rejectedCalls = [];
 
   @override
   void initState() {
@@ -27,12 +33,51 @@ class _SellerPageState extends State<SellerPage> {
         if (mounted) {
           setState(() {
             _isCalling = event.data()!['isCalling'];
+            buyerId = event.data()!['buyerId'];
           });
 
-          if (_isCalling && !event.data()!['isAccepted']) {
-            FlutterRingtonePlayer.playRingtone();
+          if (_isCalling) {
+            if (!event.data()!['isAccepted']) {
+              FlutterRingtonePlayer.playRingtone();
+            }
           }
         }
+      }
+    });
+
+    FirebaseFirestore.instance
+        .collection("sellers")
+        .doc(widget.id)
+        .collection("missed_calls")
+        .snapshots()
+        .listen((element) {
+      _missedCalls.clear();
+      for (var element in element.docs) {
+        _missedCalls.add(element.data());
+      }
+    });
+
+    FirebaseFirestore.instance
+        .collection("sellers")
+        .doc(widget.id)
+        .collection("accepted_calls")
+        .snapshots()
+        .listen((element) {
+      _acceptedCalls.clear();
+      for (var element in element.docs) {
+        _acceptedCalls.add(element.data());
+      }
+    });
+
+    FirebaseFirestore.instance
+        .collection("sellers")
+        .doc(widget.id)
+        .collection("rejected_calls")
+        .snapshots()
+        .listen((element) {
+      _rejectedCalls.clear();
+      for (var element in element.docs) {
+        _rejectedCalls.add(element.data());
       }
     });
   }
@@ -54,17 +99,18 @@ class _SellerPageState extends State<SellerPage> {
                 height: size.height * 0.03,
               ),
               Text(
-                "Meeting",
+                widget.id,
                 style: TextStyle(fontSize: size.height * 0.05),
               ),
               SizedBox(
                 height: size.height * 0.03,
               ),
               Expanded(
-                flex: 8,
                 child: Center(
                   child: Text(
-                    _isCalling ? "Call incoming" : "No active call",
+                    _isCalling
+                        ? "Call incoming from $buyerId"
+                        : "No active call",
                     style: TextStyle(fontSize: size.height * 0.02),
                   ),
                 ),
@@ -72,6 +118,95 @@ class _SellerPageState extends State<SellerPage> {
               SizedBox(
                 height: size.height * 0.03,
               ),
+              if (!_isCalling)
+                Expanded(
+                  flex: 1,
+                  child: PageView(
+                    children: [
+                      Column(
+                        children: [
+                          Center(
+                            child: Text(
+                              "Missed Calls",
+                              style: TextStyle(
+                                  fontSize: size.height * 0.02,
+                                  color: Colors.red),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_missedCalls[index]['id']),
+                                  subtitle: Text(DateFormat('d MMM, hh:mm a')
+                                      .format(_missedCalls[index]['time']
+                                          .toDate())),
+                                );
+                              },
+                              itemCount: _missedCalls.length,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Center(
+                            child: Text(
+                              "Accepted Calls",
+                              style: TextStyle(
+                                  fontSize: size.height * 0.02,
+                                  color: Colors.green),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_acceptedCalls[index]['id']),
+                                  subtitle: Text(DateFormat('d MMM, hh:mm a')
+                                      .format(_acceptedCalls[index]['time']
+                                          .toDate())),
+                                  trailing: Text(Duration(
+                                          seconds: _acceptedCalls[index]
+                                              ['duration'])
+                                      .toString()
+                                      .split('.')
+                                      .first),
+                                );
+                              },
+                              itemCount: _acceptedCalls.length,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Center(
+                            child: Text(
+                              "Rejected Calls",
+                              style: TextStyle(
+                                  fontSize: size.height * 0.02,
+                                  color: Colors.orange),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_rejectedCalls[index]['id']),
+                                  subtitle: Text(DateFormat('d MMM, hh:mm a')
+                                      .format(_rejectedCalls[index]['time']
+                                          .toDate())),
+                                );
+                              },
+                              itemCount: _rejectedCalls.length,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               if (_isCalling)
                 Expanded(
                   child: Row(
@@ -79,7 +214,8 @@ class _SellerPageState extends State<SellerPage> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
-                            MeetingFirebase().cutCall(widget.id);
+                            MeetingFirebase().cutCall(widget.id, buyerId,
+                                DateTime.now(), Duration.zero);
                             FlutterRingtonePlayer.stop();
                           },
                           child: Container(
@@ -108,8 +244,10 @@ class _SellerPageState extends State<SellerPage> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                          CallPage(channel: widget.id)));
+                                      builder: (context) => CallPage(
+                                            id: widget.id,
+                                            buyerId: buyerId,
+                                          )));
                             });
                           },
                           child: Container(
