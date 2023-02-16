@@ -85,14 +85,19 @@ class MeetingFirebase {
   }
 
   Future<bool> callOnFcmApiSendPushNotifications(
-      String token, String id, BuildContext context) async {
+      String token, String id, BuildContext context, bool isCancel) async {
     const postUrl = 'https://fcm.googleapis.com/fcm/send';
     final data = {
       "to": token,
-      "data": {
-        "title": 'Incoming call from $id',
-        "body": 'Click to open',
-      },
+      "data": isCancel
+          ? {
+              "title": 'cancel',
+              "body": 'cancel',
+            }
+          : {
+              "title": 'Incoming call from $id',
+              "body": 'Click to open',
+            },
     };
 
     final headers = {
@@ -107,7 +112,6 @@ class MeetingFirebase {
         headers: headers);
 
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sent!")));
       return true;
     } else {
       return false;

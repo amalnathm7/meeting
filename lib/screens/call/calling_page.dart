@@ -18,6 +18,7 @@ class _CallingPageState extends State<CallingPage> {
   bool _isCancelled = false;
   bool _isMissed = false;
   bool _flag = false;
+  late String _token;
 
   @override
   void initState() {
@@ -34,8 +35,9 @@ class _CallingPageState extends State<CallingPage> {
             _isCalling = event.data()!['isCalling'];
             if (!_flag) {
               _flag = true;
+              _token = event.data()!['token'];
               MeetingFirebase().callOnFcmApiSendPushNotifications(
-                  event.data()!['token'], widget.buyerId, context);
+                  _token, widget.buyerId, context, false);
             }
           });
 
@@ -65,6 +67,9 @@ class _CallingPageState extends State<CallingPage> {
         });
 
         MeetingFirebase().cancelCall(widget.id, widget.buyerId);
+
+        MeetingFirebase().callOnFcmApiSendPushNotifications(
+            _token, widget.buyerId, context, true);
       }
     });
   }
@@ -76,6 +81,10 @@ class _CallingPageState extends State<CallingPage> {
     return WillPopScope(
       onWillPop: () async {
         MeetingFirebase().cancelCall(widget.id, widget.buyerId);
+
+        MeetingFirebase().callOnFcmApiSendPushNotifications(
+            _token, widget.buyerId, context, true);
+
         return true;
       },
       child: Scaffold(
@@ -106,6 +115,9 @@ class _CallingPageState extends State<CallingPage> {
                 }
 
                 MeetingFirebase().cancelCall(widget.id, widget.buyerId);
+
+                MeetingFirebase().callOnFcmApiSendPushNotifications(
+                    _token, widget.buyerId, context, true);
               },
               child: Text(
                 "Cancel call",

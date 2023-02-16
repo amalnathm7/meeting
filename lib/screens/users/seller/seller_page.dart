@@ -1,12 +1,10 @@
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:meeting/screens/call/call_page.dart';
 import 'package:meeting/services/firebase.dart';
 import 'package:intl/intl.dart';
+import 'package:meeting/services/notifications.dart';
 
 class SellerPage extends StatefulWidget {
   const SellerPage({Key? key, required this.id}) : super(key: key);
@@ -18,21 +16,11 @@ class SellerPage extends StatefulWidget {
 
 class _SellerPageState extends State<SellerPage> with WidgetsBindingObserver {
   bool _isCalling = false;
-  bool _isMinimised = false;
   String buyerId = "";
 
   final List<Map<String, dynamic>> _missedCalls = [];
   final List<Map<String, dynamic>> _acceptedCalls = [];
   final List<Map<String, dynamic>> _rejectedCalls = [];
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _isMinimised = true;
-    } else if (state == AppLifecycleState.resumed) {
-      _isMinimised = false;
-    }
-  }
 
   @override
   void initState() {
@@ -55,23 +43,6 @@ class _SellerPageState extends State<SellerPage> with WidgetsBindingObserver {
             _isCalling = event.data()!['isCalling'];
             buyerId = event.data()!['buyerId'];
           });
-
-          final FlutterLocalNotificationsPlugin
-              flutterLocalNotificationsPlugin =
-              FlutterLocalNotificationsPlugin();
-          final notificationAppLaunchDetails =
-              await flutterLocalNotificationsPlugin
-                  .getNotificationAppLaunchDetails();
-
-          if (_isCalling &&
-              (notificationAppLaunchDetails == null ||
-                  !notificationAppLaunchDetails.didNotificationLaunchApp)) {
-            if (!event.data()!['isAccepted'] && !_isMinimised) {
-              FlutterRingtonePlayer.playRingtone();
-            }
-          } else {
-            FlutterRingtonePlayer.stop();
-          }
         }
       }
     });
@@ -266,13 +237,11 @@ class _SellerPageState extends State<SellerPage> with WidgetsBindingObserver {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
+                          onTap: () async {
+                            await cancelNotification();
+
                             MeetingFirebase().cutCall(widget.id, buyerId,
                                 DateTime.now(), Duration.zero);
-                            FlutterRingtonePlayer.stop();
-                            final sendPort = IsolateNameServer.lookupPortByName(
-                                'currentIsolate');
-                            sendPort?.send('stop');
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -292,11 +261,9 @@ class _SellerPageState extends State<SellerPage> with WidgetsBindingObserver {
                       ),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
-                            FlutterRingtonePlayer.stop();
-                            final sendPort = IsolateNameServer.lookupPortByName(
-                                'currentIsolate');
-                            sendPort?.send('stop');
+                          onTap: () async {
+                            await cancelNotification();
+
                             MeetingFirebase()
                                 .acceptCall(widget.id)
                                 .then((value) {

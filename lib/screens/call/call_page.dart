@@ -2,7 +2,6 @@ import 'package:agora_uikit/agora_uikit.dart';
 import 'package:agora_uikit/controllers/session_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:meeting/services/firebase.dart';
 
 class CallPage extends StatefulWidget {
@@ -38,7 +37,6 @@ class _CallPageState extends State<CallPage> {
               sessionController: client.sessionController,
             );
             Navigator.pop(context);
-            FlutterRingtonePlayer.stop();
           }
         }
       }
