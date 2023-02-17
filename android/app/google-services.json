@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "782041750403-ueksuhq2sf6kutdh7kat33vbajm7dfip.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.freelance.meeting",
+            "certificate_hash": "cede9f7286ec87ed2f9bca434534f77ce9935340"
+          }
+        },
+        {
           "client_id": "782041750403-mkm98mhsf737h3eqbht8tel23b8mgm0v.apps.googleusercontent.com",
           "client_type": 3
         }

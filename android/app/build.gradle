@@ -46,13 +46,22 @@ android {
         versionName flutterVersionName
     }
 
+    signingConfigs {
+        release {
+            storeFile file('C:/Users/amaln/StudioProjects/meeting/my-release-key.jks')
+            storePassword 'meeting'
+            keyAlias 'my-alias'
+            keyPassword 'meeting'
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            minifyEnabled false
-            shrinkResources false
-            signingConfig signingConfigs.debug
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }

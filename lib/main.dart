@@ -15,6 +15,7 @@ void main() async {
   runApp(const MyApp());
 }
 
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.data['title'] == 'cancel') {
     await cancelNotification();
