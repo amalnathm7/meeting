@@ -89,10 +89,6 @@ class MeetingFirebase {
     const postUrl = 'https://fcm.googleapis.com/fcm/send';
     final data = {
       "to": token,
-      "notification": {
-        "title": "hi",
-        "body": "hello",
-      },
       "data": isCancel
           ? {
               "title": 'cancel',

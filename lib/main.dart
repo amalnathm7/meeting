@@ -33,7 +33,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final int appCategory = 2;
+  final int appCategory = 0;
 
   @override
   Widget build(BuildContext context) {
